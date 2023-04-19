@@ -1,36 +1,36 @@
 const { readdirSync, rename } = require('fs')
 const { resolve, join } = require('path')
 
-const musicFolderPath = resolve(__dirname)
+const renamerFolder = resolve(__dirname)
+const renamerFolders = readdirSync(renamerFolder)
 
-const folders = readdirSync(musicFolderPath)
+const restrictedFiles = ['index.js', 'package.json']
 
 const prefixToDelete = '[SPOTIFY-DOWNLOADER.COM]'
 
-folders.forEach((candidateFolder) => {
-  if (candidateFolder.includes(prefixToDelete)) {
-    const candidateFolderAfter = candidateFolder
-      .substring(prefixToDelete.length, candidateFolder.length)
-      .trim()
+const removePrefix = (filePath) => filePath.substring(prefixToDelete.length, filePath.length).trim()
 
-    rename(
-      musicFolderPath + `/${candidateFolder}`,
-      musicFolderPath +
-        `/${candidateFolder.substring(prefixToDelete.length, candidateFolder.length).trim()}`,
-      (err) => console.log(err),
-    )
+renamerFolders
+  .filter((candidate) => !restrictedFiles.includes(candidate))
+  .forEach((candidateFolder) => {
+    const musicFolder = join(renamerFolder, candidateFolder)
+    const musicFiles = readdirSync(join(renamerFolder, candidateFolder))
 
-    const musicFolder = join(musicFolderPath, candidateFolderAfter)
-    const files = readdirSync(join(musicFolderPath, candidateFolderAfter))
-
-    files.forEach((file) => {
-      if (file.includes(prefixToDelete)) {
-        return rename(
-          musicFolder + `/${file}`,
-          musicFolder + `/${file.substring(prefixToDelete.length, file.length).trim()}`,
+    musicFiles.forEach((candidateFile) => {
+      if (candidateFile.includes(prefixToDelete)) {
+        rename(
+          musicFolder + `/${candidateFile}`,
+          musicFolder + `/${removePrefix(candidateFile)}`,
           (err) => console.log(err),
         )
       }
     })
-  }
-})
+
+    if (candidateFolder.includes(prefixToDelete)) {
+      rename(
+        renamerFolder + `/${candidateFolder}`,
+        renamerFolder + `/${removePrefix(candidateFolder)}`,
+        (err) => console.log(err),
+      )
+    }
+  })
