@@ -5,10 +5,17 @@ const renamerFolder = resolve(__dirname)
 const renamerFolders = readdirSync(renamerFolder)
 
 const restrictedFiles = ['index.js', 'package.json']
-
 const prefixToDelete = '[SPOTIFY-DOWNLOADER.COM]'
 
 const removePrefix = (filePath) => filePath.substring(prefixToDelete.length, filePath.length).trim()
+
+const renameCandidate = (parent, candidate) => {
+  if (candidate.includes(prefixToDelete)) {
+    rename(parent + `/${candidate}`, parent + `/${removePrefix(candidate)}`, (err) =>
+      console.log(err),
+    )
+  }
+}
 
 renamerFolders
   .filter((candidate) => !restrictedFiles.includes(candidate))
@@ -17,20 +24,8 @@ renamerFolders
     const musicFiles = readdirSync(join(renamerFolder, candidateFolder))
 
     musicFiles.forEach((candidateFile) => {
-      if (candidateFile.includes(prefixToDelete)) {
-        rename(
-          musicFolder + `/${candidateFile}`,
-          musicFolder + `/${removePrefix(candidateFile)}`,
-          (err) => console.log(err),
-        )
-      }
+      renameCandidate(musicFolder, candidateFile)
     })
 
-    if (candidateFolder.includes(prefixToDelete)) {
-      rename(
-        renamerFolder + `/${candidateFolder}`,
-        renamerFolder + `/${removePrefix(candidateFolder)}`,
-        (err) => console.log(err),
-      )
-    }
+    renameCandidate(renamerFolder, candidateFolder)
   })
